@@ -1,0 +1,14 @@
+{
+  "name": "plugin-please",
+  "version": "1.0.0",
+  "description": "A simple and straightforward plugin manager.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "slevey087",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^23.6.0"
+  }
+}
