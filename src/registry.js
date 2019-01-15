@@ -7,20 +7,42 @@
 
 /**
  * registry:
- * tracks module-wide variables: hooks, packages, packageNames, and the directory
+ * tracks module-wide variables: hooks, plugins, pluginNames, and the directory
  */
 var registry = {
-    hooks: {},
-    packages: [],
-    packageNames: [],
 
     /**
-     * getPackageByName:
-     * fetch registered package, using identifier 
+     * registry.directory:
+     * the path to the plugins
+     */
+    directory: process.cwd(),
+
+    /**
+     * registry.hooks:
+     * Object whose keys are string names of hooks, and whose values
+     *  are arrays of functions subscribed to those hooks.
+     */
+    hooks: {},
+
+    /**
+     * registry.plugins:
+     * array of plugins.
+     */
+    plugins: [],
+
+    /**
+     * registry.pluginNames:
+     * array of plugin names, for quick searching.
+     */
+    pluginNames: [],
+
+    /**
+     * getPluginByName:
+     * fetch registered plugin, using identifier 
      * @param {string} name 
      */
-    getPackageByName(name) {
-        var list = registry.packages.filter(pkg => (pkg.name === name))
+    getPluginByName(name) {
+        var list = registry.plugins.filter(plg => (plg.name === name))
         if (list.length == 1) return list[0]
         else return list;
     },
@@ -31,8 +53,8 @@ var registry = {
      */
     reset() {
         registry.hooks = {};
-        registry.packages = [];
-        registry.packageNames = [];
+        registry.plugins = [];
+        registry.pluginNames = [];
     },
 
     /**
@@ -42,8 +64,9 @@ var registry = {
      * @param {function} hookFn 
      * @param {number} hookPriority 
      */
-    subscribe(hookName, hookFn, hookPriority = 100) {
+    subscribe(hookName, hookFn, hookPriority = 100, pluginName = null) {
         hookFn.priority = hookPriority;
+        hookFn.pluginName = pluginName;
 
         if (!registry.hooks[hookName]) {
             registry.hooks[hookName] = [];
@@ -51,6 +74,14 @@ var registry = {
 
         registry.hooks[hookName].push(hookFn);
         return hookName
+    },
+
+    unsubscribe(hookName, hookFn) {
+        // This prevents errors if hook doesn't exist. But this should never happen.
+        if (!registry.hooks[hookName]) return;
+
+        if (registry.hooks[hookName].includes(hookFn))
+            registry.hooks[hookName] = registry.hooks[hookName].filter(fn => !(fn === hookFn))
     }
 };
 

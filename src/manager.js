@@ -1,52 +1,43 @@
 "use strict";
 
-// --------------------------------------------------- //
-// ---[[   P L U G I N   M A N A G E R   A P I   ]]--- //
-// --------------------------------------------------- //
+// ------------------------------------- //
+// ---[[   M A N A G E R   A P I   ]]--- //
+// ------------------------------------- //
 
 // Local dependencies
 var registry = require("./registry")
-var { _Package, Package } = require("./package")
+var { _Plugin, Plugin } = require("./plugin")
+var hooksAPI = require("./hooks")
 
 
 /**
  * PluginManager:
  * Main module interface.
  */
-var PluginManager = {
+var managerAPI = {
 
     /**
-     * 
+     * PluginManager.plugin:
+     * imports plugin from file, or recalls from registry.
      * @param {*} source 
      * @param {*} context 
+     * @returns {Plugin}
      */
-    package(source, context) {
-        if (packageNames.includes(source)) {
+    plugin(source, context) {
+        if (pluginNames.includes(source)) {
             // Already loaded module, just return it
-            return new Package(getPackageByName(source))
+            return new Plugin(getPluginByName(source))
         } else {
             var name = path.basename(source),
-                module = require(pluginDirectoryPath + source + '.js')
+                module = require(registry.directory + source + '.js')
 
-            // obtain package informations and apply some default values
-            var pkg = new _Package(module, name, context)
-            return new Package(pkg)
+            // obtain plugin informations and apply some default values
+            var plg = new _Plugin(module, name, context)
+            return new Plugin(plg)
         }
     },
 
-    /**
-     * PluginManager.isEmpty
-     * returns false if a hook has subscribers, true otherwise
-     * @param {string} hookName 
-     * @returns {boolean}
-     */
-    isEmpty(hookName) {
-        if (registry.hooks[hookName] && registry.hooks[hookName].length) {
-            return false;
-        } else {
-            return true;
-        }
-    },
+
 
     /**
      * PluginManager.reset:
@@ -55,14 +46,14 @@ var PluginManager = {
      */
     reset() {
         registry.hooks = {}
-        registry.packages = []
-        registry.packageNames = []
+        registry.plugins = []
+        registry.pluginNames = []
         return this;
     },
 
     /**
      * PluginManager.start:
-     * Initialize all loaded packages.
+     * Initialize all loaded plugins.
      * @param {function} callback
      * @returns {Promise}
      */
@@ -71,25 +62,25 @@ var PluginManager = {
             inits = [];
 
         // sort by priorities
-        packages.sort(function (a, b) {
+        plugins.sort(function (a, b) {
             return a.priority > b.priority;
         });
 
         // register init & hooks
         // hooks are all functions who are not special properties
         // identified by "skipProps" list
-        packages.forEach(function (pkg) {
-            if (pkg.init) {
-                inits.push(pkg.init);
+        plugins.forEach(function (plg) {
+            if (plg.init) {
+                inits.push(plg.init);
             }
-            for (var prop in pkg) {
-                if (skipProps.indexOf(prop) === -1 && typeof pkg[prop] == 'function') {
-                    PluginManager.registerHook(prop, pkg[prop]);
+            for (var prop in plg) {
+                if (skipProps.indexOf(prop) === -1 && typeof plg[prop] == 'function') {
+                    PluginManager.registerHook(prop, plg[prop]);
                 }
             }
         });
 
-        // run all package.init() method in series!
+        // run all plugin.init() method in series!
         if (inits.length) {
             var promises = []
 
@@ -123,12 +114,5 @@ var PluginManager = {
 
 }
 
-var loader = function (directory) {
-    registry.directory = directory
-    return loader
-}
 
-Object.assign(loader, PluginManager)
-
-module.exports = loader
 
