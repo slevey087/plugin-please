@@ -7,7 +7,7 @@
 // Local dependencies
 var registry = require("./registry")
 var { _Plugin, Plugin } = require("./plugin")
-var hooksAPI = require("./hooks")
+var Hook = require("./hooks")
 
 
 /**
@@ -37,7 +37,47 @@ var managerAPI = {
         }
     },
 
+    directory(dir) {
 
+    },
+
+    plugins: {
+        listActive() {
+
+        },
+        listInactive() {
+
+        },
+        listAll() {
+
+        }
+    },
+
+    hook(hookName, ...args) {
+        var hook;
+
+        // if hook already exists, fetch it
+        if (registry.hooks[hookName]) hook = registry.hooks[hookName]
+        else {
+            // otherwise, create new one and store it
+            hook = new Hook(hookName)
+            registry.hooks[hookName] = hook;
+        }
+
+        return hook.inParallel(...args);
+    },
+
+    manageHook(hookName) {
+        // either fetch existing hook or create new one
+        return registry.hooks[hookName] || new Hook(hookName);
+
+    },
+
+
+    runHook(hookName) {
+        // runHook and manageHook are identical. The difference is linguistic clarity.
+        return this.manageHook(hookName)
+    },
 
     /**
      * PluginManager.reset:
@@ -45,19 +85,17 @@ var managerAPI = {
      * @returns {object} PluginManager
      */
     reset() {
-        registry.hooks = {}
-        registry.plugins = []
-        registry.pluginNames = []
+        registry.reset()
         return this;
     },
 
     /**
-     * PluginManager.start:
+     * PluginManager.initAll:
      * Initialize all loaded plugins.
      * @param {function} callback
      * @returns {Promise}
      */
-    start(callback) {
+    initAll(callback) {
         var self = this,
             inits = [];
 

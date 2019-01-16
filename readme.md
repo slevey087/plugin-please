@@ -24,7 +24,47 @@ Easy!
 npm install plugin-please
 ```
 
-## Loading
+## Quick Start
+
+```js
+// In application
+
+var PluginManager = require("plugin-please")("//path/to/plugins")
+
+// Import all plugins in plugins directory
+PluginManager.directory();
+
+// Initialize all plugins
+PluginManager.initAll();
+
+// ...
+
+// At various locations in your application, mark hooks
+PluginManager.hook("before-load")
+// ...
+PluginManager.hook("after-load")
+```
+
+```js
+// In plugin file
+module.exports = function awesome-plugin(){
+    // setup code here
+    return {
+        init(){
+            // code to run when plugin is activated
+        },
+        hooks:{
+            ["before-load"](){
+                // code to run at the 'before-load' hook
+            },
+            ["after-load"](){
+                // code to run at the 'after-load' hook
+            }
+        }
+    }
+}
+```
+## Much More Detail
 
 Be sure to `require` the PluginManager
 ```js
@@ -41,11 +81,15 @@ Then you can load plugins using a file name
 
 ```js
 var filename = "awesome-plugin";
-PluginManager.plugin(directory); // imports awesome-plugin.js
+PluginManager.plugin(filename); // imports awesome-plugin.js
 ```
-
 This will return a `plugin` object. (You can run this command multiple times to return a new instance of the object.)
 
+To load a whole folder, use `.directory()`
+```js
+PluginManager.directory()
+```
+Then use `.plugin` 
 ## `Plugin` API
 
 ### Basic API
@@ -104,16 +148,68 @@ PluginManager.plugin("awesome-plugin").name() // returns "awesome-plugin"
 
 ## Hooks
 
-Hooks are the primary way by which plugins can extend an application. Place them in your project at various key locations, and give them a helpful name. 
+Hooks are the primary way by which plugins can extend an application. Place them in your project at various key locations, and give them a helpful name. Plugins can subscribe to them by providing code that will run when the hook is invoked.
 
-Code registered to a hook can be executed using 
+### `.hook()`
+
+Code registered to a hook can be executed in parallel using 
 
 ```js
-PluginManager.hook
+var hookName = /* eg. */ "on-load";
+var args = [/* arguments will be passed to subscribers */]
+PluginManager.hook(hookName, args);
 ```
 
-TODO: continue here
+This will run the hooks in parallel, then return a `Promise`, whose value will be an array of the return values of the subscribers. Therefore you can use `.then`
+```js
+PluginManager.hook("after-loading").then(function(results){
+    // code here won't run until all subscribers have completed execution
+})
+```
+or you can use `async`/`await`:
+```js
+var results = await PluginManager.hook("display-interface")
+// // code here won't run until all subscribers have completed execution
+```
 
+### `.runHook()`
+
+Hooks using `.hook` will run their subscribers in parallel, all at once, but parallel isn't the only way to execute a hook. You can also choose _series_ or _waterfall_. To use these, instead of `.hook()`, use `.runHook()`
+
+```js
+// run in series
+PluginManager.runHook("on-load").inSeries(...args);
+// or as a waterfall
+PluginManager.runHook("on-load").inWaterfall(...args);
+// or as parallel. This is identical to .hook() 
+PluginManager.runHook("on-load").inParallel(...args);
+```
+
+Each of these returns a Promise. 
+
+_Waterfall_ is like series, except that the result of each subscriber is passed as the first argument to the next subscriber, and the final result is returned as the value of the Promise. For series, a successful completion of the series will return `true` as the value of the Promise.
+
+### `.manageHook()`
+
+Use `manageHook` if you need one of the administrative methods. You can add a subscriber
+```js
+var hookFn = // some code to run when the hook is called
+var hookPriority = 101 // optional, default 100
+var pluginName // optional. In event of an error, while running, pluginName will be included in the error message
+PluginManager.manageHook("on-load").subscribe(hookFn, hookPriority, pluginName)
+```
+remove a subscriber
+```js
+PluginManager.manageHook("on-load").unsubscribe(hookFn)
+```
+check whether there are any subscribers
+```js
+PluginManager.manageHook("on-load").checkEmpty(); // returns true if no subscribers, false otherwise
+```
+or clear all subscribers
+```js
+PluginManager.manageHook("on-load").reset();
+```
 ## Building a plugin
 
 A plugin is a Node module, which exports a function. When that function is run, it returns an object. 

@@ -5,7 +5,7 @@
 // ------------------------------------------- //
 
 var managerAPI = require("./src/manager");
-var hooksAPI = require("./src/hooks");
+
 
 /**
  * PluginManager:
@@ -19,7 +19,7 @@ var PluginManager = function (directory) {
     return PluginManager
 }
 
-// merge in APIs
-Object.assign(PluginManager, managerAPI, hooksAPI)
+// merge in API
+Object.assign(PluginManager, managerAPI)
 
 module.exports = PluginManager

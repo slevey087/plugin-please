@@ -1,3 +1,5 @@
+"use strict";
+
 var registry = require("../src/registry")
 var { _Plugin, Plugin } = require("../src/plugin")
 
@@ -102,7 +104,7 @@ test("_Plugin name conflict", () => {
 })
 
 
-test("_Plugin subscribe", () => {
+test("_Plugin subscribe/unsubscribe", () => {
     let hookfn1 = jest.fn()
     let hookfn2 = jest.fn()
     let context = {
@@ -115,9 +117,15 @@ test("_Plugin subscribe", () => {
     expect(plg.subscribe()).toBe(plg)
 
     expect(registry.hooks['on-load']).toBeDefined()
-    expect(registry.hooks['on-load']).toContain(hookfn1)
+    expect(registry.hooks['on-load'].subscribers).toContain(hookfn1)
     expect(registry.hooks['after-load']).toBeDefined()
-    expect(registry.hooks['after-load']).toContain(hookfn2)
+    expect(registry.hooks['after-load'].subscribers).toContain(hookfn2)
+
+    // unsubscribe
+    plg.unsubscribe();
+
+    expect(registry.hooks['on-load'].subscribers).not.toContain(hookfn1)
+    expect(registry.hooks['after-load'].subscribers).not.toContain(hookfn2);
 })
 
 

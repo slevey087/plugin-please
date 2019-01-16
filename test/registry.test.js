@@ -9,7 +9,6 @@ test("registry has all properties", () => {
     expect(registry).toHaveProperty("plugins");
     expect(registry).toHaveProperty("pluginNames");
     expect(registry).toHaveProperty("getPluginByName");
-    expect(registry).toHaveProperty("subscribe");
 })
 
 
@@ -26,28 +25,17 @@ test("getPluginByName returns plugin", () => {
 })
 
 
-test("subscribe creates hook and adds subscriber", () => {
-    let subscriber = function () { }
+test("reset clears values", () => {
+    registry.hooks = "the"
+    registry.plugins = "hi"
+    registry.pluginNames = "me"
 
-    registry.subscribe("on-load", subscriber)
-    expect(registry.hooks).toHaveProperty("on-load", [subscriber])
+    registry.reset();
 
-    // default priority
-    expect(registry.hooks["on-load"][0].priority).toBe(100)
+    expect(registry.hooks).toEqual({})
+    expect(registry.plugins).toEqual([])
+    expect(registry.pluginNames).toEqual([])
 
-    // non-default subscriber
-    registry.subscribe("on-load", subscriber, 99)
-    expect(registry.hooks["on-load"][1].priority).toBe(99)
 })
 
 
-test("unsubscribe removes subscriber", () => {
-    let subscriber = function () { }
-
-    registry.subscribe("on-load", subscriber)
-    expect(registry.hooks).toHaveProperty("on-load")
-    expect(registry.hooks["on-load"]).toContain(subscriber)
-
-    registry.unsubscribe("on-load", subscriber)
-    expect(registry.hooks["on-load"]).not.toContain(subscriber)
-})

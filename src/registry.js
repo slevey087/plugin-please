@@ -55,34 +55,9 @@ var registry = {
         registry.hooks = {};
         registry.plugins = [];
         registry.pluginNames = [];
-    },
-
-    /**
-     * subscribe:
-     * Add a listener function to a hook-string.
-     * @param {string} hookName 
-     * @param {function} hookFn 
-     * @param {number} hookPriority 
-     */
-    subscribe(hookName, hookFn, hookPriority = 100, pluginName = null) {
-        hookFn.priority = hookPriority;
-        hookFn.pluginName = pluginName;
-
-        if (!registry.hooks[hookName]) {
-            registry.hooks[hookName] = [];
-        }
-
-        registry.hooks[hookName].push(hookFn);
-        return hookName
-    },
-
-    unsubscribe(hookName, hookFn) {
-        // This prevents errors if hook doesn't exist. But this should never happen.
-        if (!registry.hooks[hookName]) return;
-
-        if (registry.hooks[hookName].includes(hookFn))
-            registry.hooks[hookName] = registry.hooks[hookName].filter(fn => !(fn === hookFn))
     }
+
+
 };
 
 module.exports = registry

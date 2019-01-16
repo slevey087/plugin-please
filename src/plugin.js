@@ -1,10 +1,11 @@
 "use strict";
 
-// --------------------------------------- //
-// ---[[   P A C K A G E S   A P I   ]]--- //
-// --------------------------------------- //
+// ----------------------------------- //
+// ---[[   P L U G I N   A P I   ]]--- //
+// ----------------------------------- //
 
 var registry = require("./registry");
+var Hook = require("./hooks")
 
 // Properites to ignore when subscribing to hooks.
 var skipProps = [
@@ -22,7 +23,6 @@ var skipProps = [
 
 /**
  * Backend class for plugins.
- * 
  */
 class _Plugin {
 
@@ -76,6 +76,7 @@ class _Plugin {
     /**
      * _plugin.subscribe:
      * adds listeners from plugin for all specificed hooks
+     * 
      * @returns {object} self
      */
     subscribe() {
@@ -84,13 +85,17 @@ class _Plugin {
             // Don't include the API properties
             if (skipProps.indexOf(prop) === -1) {
 
+                var priority
                 // inherit priority
                 if (typeof plg[prop] == 'function')
-                    registry.subscribe(prop, plg[prop], plg.priority, plg.name);
+                    priority = plg.priority
 
                 // individual subscriber priority
                 else if (typeof plg[prop] == 'object')
-                    registry.subscribe(prop, plg[prop].subscriber, plg[prop].priority)
+                    priority = plg[prop].priority;
+
+                var hook = registry.hooks[prop] || new Hook(prop)
+                hook.subscribe(plg[prop], priority, plg[name]);
             }
         }
         return this;
@@ -99,17 +104,22 @@ class _Plugin {
     /**
      * _plugin.unsubscribe
      * removes listeners from plugin for all specified hooks
+     * 
      * @returns {object} self
      */
     unsubscribe() {
         var plg = this;
         for (var prop in plg) {
-            if (skipProps.indexOf(prop) === -1 && typeof plg[prop] == 'function')
-                registry.unsubscribe(prop, plg[prop])
+            if (skipProps.indexOf(prop) === -1 && typeof plg[prop] == 'function') {
+                // If hook doesn't exist (not sure how that could have happened...) then we're done
+                if (!registry.hooks[prop]) return this;
+
+                let hook = registry.hooks[prop]
+                hook.unsubscribe(plg[prop])
+            }
         }
         return this;
     }
-
 }
 
 
