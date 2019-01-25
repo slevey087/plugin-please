@@ -5,12 +5,16 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "toc": "markdown-toc -i readme.md"
+    "toc": "markdown-toc -i readme.md",
+    "watch:test": "watch -p /test/* -c 'npm run test'"
   },
   "author": "slevey087",
   "license": "ISC",
   "devDependencies": {
     "jest": "^23.6.0",
     "markdown-toc": "^1.2.0"
+  },
+  "optionalDependencies": {
+    "debug": "^4.1.1"
   }
 }

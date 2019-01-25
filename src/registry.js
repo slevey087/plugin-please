@@ -1,9 +1,11 @@
 "use strict";
+var debug = require("./debug")
 
 // ------------------------------- //
 // ---[[   R E G I S T R Y   ]]--- //
 // ------------------------------- //
 
+debug("Creating registry.")
 
 /**
  * registry:
@@ -42,6 +44,7 @@ var registry = {
      * @param {string} name 
      */
     getPluginByName(name) {
+        debug("registry: fetching plugin %s", name)
         var list = registry.plugins.filter(plg => (plg.name === name))
         if (list.length == 1) return list[0]
         else return list;
@@ -52,6 +55,7 @@ var registry = {
      * clear registry data.
      */
     reset() {
+        debug("registry.reset")
         registry.hooks = {};
         registry.plugins = [];
         registry.pluginNames = [];

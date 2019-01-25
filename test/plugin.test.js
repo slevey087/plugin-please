@@ -22,7 +22,10 @@ var mockPlugin = jest.fn(function (context = {}) {
         obj.settings = settfn
     }
 
-    context.hooks ? Object.assign(obj, context.hooks) : null;
+    if (context.hooks) {
+        obj.hooks = {}
+        Object.assign(obj.hooks, context.hooks)
+    }
 
     return obj
 })
@@ -52,6 +55,7 @@ test("_Plugin constructor defaults", () => {
     expect(plg.require).toBeInstanceOf(Function)
     expect(plg.stop).toBeInstanceOf(Function)
     expect(plg.settings).toBeInstanceOf(Function)
+    expect(plg.hooks).toBeInstanceOf(Object)
     expect(plg.public).toBeInstanceOf(Object)
 
     // check that plugin got added to registry
@@ -82,7 +86,7 @@ test("_Plugin constructor non-defaults", () => {
     expect(plg.stop).toBe(stopfn)
     expect(plg.settings).toBe(settfn)
     expect(plg.public).toBe(context.public)
-    expect(plg["on-load"]).toBe(context.hooks['on-load'])
+    expect(plg.hooks["on-load"]).toBe(context.hooks['on-load'])
 })
 
 test("_Plugin name conflict", () => {
@@ -133,7 +137,6 @@ test("_Plugin subscribe/unsubscribe", () => {
 test("Plugin exists", () => {
     expect(Plugin).toBeDefined();
 })
-
 
 test("Plugin constructor", () => {
 

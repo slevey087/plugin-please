@@ -1,4 +1,5 @@
 "use strict";
+var debug = require("./debug")
 
 // ------------------------------------- //
 // ---[[   M A N A G E R   A P I   ]]--- //
@@ -11,8 +12,8 @@ var Hook = require("./hooks")
 
 
 /**
- * PluginManager:
- * Main module interface.
+ * managerAPI:
+ * This API becomes the main module interface.
  */
 var managerAPI = {
 

@@ -1,8 +1,11 @@
 "use strict";
+var debug = require("./debug")
 
 // --------------------------------- //
 // ---[[   H O O K S   A P I   ]]--- //
 // --------------------------------- //
+
+debug("Building hooks class");
 
 var registry = require("./registry")
 
@@ -23,6 +26,7 @@ class Hook {
         this.hookName = hookName
         this.subscribers = [];
 
+        debug("hooks: registering new hook %s", hookName)
         registry.hooks[hookName] = this;
     }
 
@@ -34,6 +38,7 @@ class Hook {
      * @returns {boolean}
      */
     checkEmpty() {
+        debug("hook: checkEmpty")
         if (this.subscribers.length === 0) return true;
         else return false;
     }
@@ -44,6 +49,7 @@ class Hook {
      * removes all subscribers
      */
     reset() {
+        debug("hook: resetting")
         this.subscribers = [];
     }
 
@@ -64,6 +70,7 @@ class Hook {
         hookFn.priority = hookPriority;
         hookFn.pluginName = pluginName;
 
+        debug("hook: subscribing listener to %s, priority %d, pluginName %s", this.hookName, hookPriority, pluginName)
         this.subscribers.push(hookFn)
         return this;
     }
@@ -77,9 +84,10 @@ class Hook {
      */
     unsubscribe(hookFn) {
         if (!hookFn || typeof hookFn !== 'function') throw new Error("argument must be a function")
-        if (this.subscribers.includes(hookFn))
+        if (this.subscribers.includes(hookFn)) {
             this.subscribers = this.subscribers.filter(fn => !(fn === hookFn))
-
+            debug("hook: unsubscribing from %s", this.hookName)
+        }
         return this;
     }
 
@@ -93,6 +101,8 @@ class Hook {
      * @return {Promise}
      */
     inSeries(...args) {
+        debug("hook: running %s in Series", this.hookName)
+
         // Return false if no subscribers
         if (this.subscribers.length == 0)
             return false;
@@ -103,6 +113,7 @@ class Hook {
         // construct promise chain
         var promise = Promise.resolve();
         this.subscribers.forEach(subscriber => promise = promise.then(function () {
+            debug("hook.inSeries: executing subscriber %s", subscriber.pluginName)
             var result = subscriber(...args);
 
             // If subscriber returns false, halt sequence
@@ -125,6 +136,8 @@ class Hook {
      * @returns {Promise}
      */
     inParallel(...args) {
+        debug("hook: running %s in Parallel", this.hookName)
+
         // Return false if no subscribers
         if (this.subscribers.length == 0)
             return false;
@@ -134,6 +147,7 @@ class Hook {
 
         // construct promises
         var promises = this.subscribers.map(subscriber => new Promise(function (resolve, reject) {
+            debug("hook.inParallel: executing subscriber %s", subscriber.pluginName)
             var result = subscriber(...args)
             result === false ? reject(subscriber.pluginName) : resolve(result)
         }));
@@ -151,6 +165,9 @@ class Hook {
      * @returns {Promise}
      */
     inWaterfall(...args) {
+        debug("hook: running %s in Waterfall", this.hookName)
+
+
         // Return false if no subscribers
         if (this.subscribers.length == 0)
             return false;
@@ -161,6 +178,8 @@ class Hook {
         // construct promise chain
         var promise = Promise.resolve();
         this.subscribers.forEach((subscriber, index) => promise = promise.then(function (previousResult) {
+            debug("hook.inWaterfall: executing subscriber %s", subscriber.pluginName)
+
             // on first call, use args. On subsequent calls, first argument will be value returned from previous subscriber
             var result = index === 0 ? subscriber(...args) : subscriber(previousResult, ...args);
             // If subscriber returns false, halt sequence

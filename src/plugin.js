@@ -1,25 +1,15 @@
 "use strict";
+var debug = require("./debug")
 
 // ----------------------------------- //
 // ---[[   P L U G I N   A P I   ]]--- //
 // ----------------------------------- //
 
+debug("Building plugin classes");
+
 var registry = require("./registry");
 var Hook = require("./hooks")
 
-// Properites to ignore when subscribing to hooks.
-var skipProps = [
-    'module',
-    'name',
-    'priority',
-    'active',
-    'init',
-    'require',
-    'stop',
-    'public',
-    'publicIfActive',
-    'settings'
-]
 
 /**
  * Backend class for plugins.
@@ -35,6 +25,8 @@ class _Plugin {
      * @param {*} context 
      */
     constructor(module, name = null, context = null) {
+        debug("Creating new _plugin %s", name);
+
         // Basic assignment and default values
         Object.assign(this, {
             module,
@@ -45,6 +37,7 @@ class _Plugin {
             require: function () { },
             stop: function () { },
             settings: function () { },
+            hooks: {},
             public: {}
         })
 
@@ -60,6 +53,7 @@ class _Plugin {
         if (registry.pluginNames.includes(this.name)) {
             if (this.module === registry.getPluginByName(this.name).module) {
                 // Same module. Do nothing
+                debug("Plugin already imported.")
             } else {
                 // Different modules with same name, throw error
                 throw new Error("Plugin name collision. Multiple plugins named " + this.name)
@@ -67,6 +61,7 @@ class _Plugin {
         }
         // No name conflict, add to registry
         else {
+            debug("Registering plugin %s", this.name)
             registry.plugins.push(this);
             registry.pluginNames.push(this.name)
         }
@@ -80,23 +75,22 @@ class _Plugin {
      * @returns {object} self
      */
     subscribe() {
+        debug("_plugin: subscribing all hooks")
         var plg = this;
-        for (var prop in plg) {
-            // Don't include the API properties
-            if (skipProps.indexOf(prop) === -1) {
+        for (var prop in plg.hooks) {
 
-                var priority
-                // inherit priority
-                if (typeof plg[prop] == 'function')
-                    priority = plg.priority
+            var priority
+            // inherit priority
+            if (typeof plg.hooks[prop] == 'function')
+                priority = plg.priority
 
-                // individual subscriber priority
-                else if (typeof plg[prop] == 'object')
-                    priority = plg[prop].priority;
+            // individual subscriber priority
+            else if (typeof plg.hooks[prop] == 'object')
+                priority = plg.hooks[prop].priority;
 
-                var hook = registry.hooks[prop] || new Hook(prop)
-                hook.subscribe(plg[prop], priority, plg[name]);
-            }
+            var hook = registry.hooks[prop] || new Hook(prop)
+            hook.subscribe(plg.hooks[prop], priority, plg[name]);
+
         }
         return this;
     }
@@ -108,14 +102,17 @@ class _Plugin {
      * @returns {object} self
      */
     unsubscribe() {
-        var plg = this;
-        for (var prop in plg) {
-            if (skipProps.indexOf(prop) === -1 && typeof plg[prop] == 'function') {
-                // If hook doesn't exist (not sure how that could have happened...) then we're done
-                if (!registry.hooks[prop]) return this;
+        debug("_plugin: unsubscribing hooks")
 
-                let hook = registry.hooks[prop]
-                hook.unsubscribe(plg[prop])
+        var plg = this;
+        for (var prop in plg.hooks) {
+            if (typeof plg.hooks[prop] == 'function') {
+                // If hook doesn't exist (not sure how that could have happened...) then we're done
+                if (registry.hooks[prop]) {
+                    // otherwise, unsubscribe the subscriber function
+                    let hook = registry.hooks[prop]
+                    hook.unsubscribe(plg.hooks[prop])
+                }
             }
         }
         return this;
@@ -135,6 +132,8 @@ class Plugin {
      * @param {_Plugin} plg 
      */
     constructor(plg) {
+        debug("Creating new plugin %s", plg.name)
+
         // Include public properties
         Object.assign(this, plg.public)
 
@@ -149,6 +148,7 @@ class Plugin {
         Object.assign(this, {
 
             init: function (...args) {
+                debug("plugin: init %s", plg.name)
                 plg.init(...args);
                 plg.subscribe();
                 plg.active = true;
@@ -156,6 +156,8 @@ class Plugin {
             },
 
             require: function (...args) {
+                debug("plugin: require %s", plg.name)
+
                 if (plg.active) plg.require(...args);
                 else {
                     plg.init(...args);
@@ -168,6 +170,8 @@ class Plugin {
             },
 
             stop: function (...args) {
+                debug("plugin: stop %s", plg.name)
+
                 if (plg.active) {
                     plg.stop(...args);
                     plg.unsubscribe();
@@ -178,6 +182,7 @@ class Plugin {
             },
 
             settings: function (...args) {
+                debug("plugin: settings %s", plg.name)
                 return plg.settings(...args);
             }
         })
