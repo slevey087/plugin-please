@@ -16,5 +16,8 @@
   },
   "optionalDependencies": {
     "debug": "^4.1.1"
+  },
+  "jest": {
+    "testPathIgnorePatters": "sample-plugin.js"
   }
 }

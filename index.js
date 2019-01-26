@@ -5,7 +5,9 @@
 // ------------------------------------------- //
 
 var managerAPI = require("./src/manager");
+var registry = require("./src/registry")
 
+var path = require("path")
 
 /**
  * PluginManager:
@@ -15,7 +17,7 @@ var managerAPI = require("./src/manager");
  */
 var PluginManager = function (directory) {
     // TODO: verify directory is directory
-    if (directory) registry.directory = directory
+    if (directory) registry.directory = path.join(process.cwd(), directory)
     return PluginManager
 }
 

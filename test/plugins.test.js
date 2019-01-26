@@ -1,7 +1,7 @@
 "use strict";
 
 var registry = require("../src/registry")
-var { _Plugin, Plugin } = require("../src/plugin")
+var { _Plugin, Plugin } = require("../src/plugins")
 
 var initfn = jest.fn()
 var reqfn = jest.fn()

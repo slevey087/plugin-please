@@ -14,6 +14,7 @@ try {
     var debug = require("debug")("plugin-please")
 }
 catch (error) {
+    // dependency not installed. 
     debug = function () { }
 }
 

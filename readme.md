@@ -31,10 +31,10 @@ npm install plugin-please
 ```js
 // In application
 
-var PluginManager = require("plugin-please")("//path/to/plugins")
+var PluginManager = require("plugin-please")("/path/to/plugins")
 
 // Import all plugins in plugins directory
-PluginManager.directory();
+PluginManager.importAll();
 
 // Initialize all plugins
 PluginManager.initAll();
@@ -56,10 +56,10 @@ module.exports = function awesomePlugin(){
             // code to run when plugin is activated
         },
         hooks:{
-            ["before-load"](){
+            "before-load"(){
                 // code to run at the 'before-load' hook
             },
-            ["after-load"](){
+            "after-load"(){
                 // code to run at the 'after-load' hook
             }
         }
@@ -78,7 +78,7 @@ var PluginManager = require("plugin-please");
 
 To use a custom directory, run on import:
 ```js
-var directory = "//path/to/plugins"
+var directory = "/path/to/plugins"
 var PluginManager = require("plugin-please")(directory);
 ```
 
@@ -86,13 +86,13 @@ Then you can load plugins using a file name
 
 ```js
 var filename = "awesome-plugin";
-PluginManager.plugin(filename); // imports awesome-plugin.js
+PluginManager.import(filename); // imports awesome-plugin.js
 ```
 This will return a `plugin` object. (You can run this command multiple times to return a new instance of the object.)
 
-To load a whole folder, use `.directory()`
+To load a whole folder, use `.importAll()`
 ```js
-PluginManager.directory()
+PluginManager.importAll()
 ```
 Then use `.plugin` 
 ## `Plugin` API
@@ -285,19 +285,19 @@ var awesome = function(){
         },
 
         // Use remaining keys to add hook subscriptions. Eg.,
+        hooks:{
+            "on-load": function(...args){
+                // do stuff when the application loads
+            }
 
-        "on-load": function(...args){
-            // do stuff when the application loads
-        }
-
-        // If you'd like to assign a hook-specific priority, use an object
-        "finish-loading":{
-            priority: 99, // default 100
-            subscriber: function(...args){
-                // do stuff when the application finishes loading.
+            // If you'd like to assign a hook-specific priority, use an object
+            "finish-loading":{
+                priority: 99, // default 100
+                subscriber: function(...args){
+                    // do stuff when the application finishes loading.
+                }
             }
         }
-
     }
 }
 

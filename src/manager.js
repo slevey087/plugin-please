@@ -7,9 +7,12 @@ var debug = require("./debug")
 
 // Local dependencies
 var registry = require("./registry")
-var { _Plugin, Plugin } = require("./plugin")
+var { _Plugin, Plugin } = require("./plugins")
 var Hook = require("./hooks")
 
+// nodeJS dependencies
+var fs = require("fs");
+var path = require("path");
 
 /**
  * managerAPI:
@@ -19,28 +22,61 @@ var managerAPI = {
 
     /**
      * PluginManager.plugin:
-     * imports plugin from file, or recalls from registry.
+     * imports plugin from file or function, or recalls from registry.
      * @param {*} source 
      * @param {*} context 
      * @returns {Plugin}
      */
     plugin(source, context) {
-        if (pluginNames.includes(source)) {
-            // Already loaded module, just return it
-            return new Plugin(getPluginByName(source))
-        } else {
-            var name = path.basename(source),
-                module = require(registry.directory + source + '.js')
+        // if we're passed a function, import it directly
+        if (typeof source === 'function') {
+            let plg = new _Plugin(source, null, context);
+            return new Plugin(plg);
+        }
 
-            // obtain plugin informations and apply some default values
-            var plg = new _Plugin(module, name, context)
-            return new Plugin(plg)
+        // if we're passed a string, look it up,
+        else if (registry.pluginNames.includes(source)) {
+            // and  return it
+            return new Plugin(registry.getPluginByName(source))
+        } else {
+            // or import a file
+            return managerAPI.import(source, context)
         }
     },
 
-    directory(dir) {
+    /**
+     * PluginManager.import:
+     * Read a file from the disk.
+     * @param {*} source Path to file
+     * @param {*} context Execution context, passed to plugin code
+     * @returns {Plugin}
+     */
+    import(source, context) {
+        var filePath = path.join(registry.directory, source)
+        var module = require(filePath)
 
+        // plugin name is file name, unless overwritten inside plugin code
+        var name = path.basename(source, ".js")
+
+        let plg = new _Plugin(module, name, context)
+        return new Plugin(plg)
     },
+
+    /**
+     * PluginManager.importAll:
+     * Imports all plugins from working directory, delivering `context` to plugin code.
+     * @param {*} context 
+     * @param {*} dir
+     * @returns {self} 
+     */
+    importAll(context = null, dir = registry.directory) {
+        var files = fs.readdirSync(dir)
+
+        files.forEach(file => managerAPI.import(file, context))
+
+        return this;
+    },
+
 
     plugins: {
         listActive() {
@@ -54,6 +90,12 @@ var managerAPI = {
         }
     },
 
+    /**
+     * PluginManager.hook:
+     * Use to makr hook with hookName. Args are delivered to plugin code when the hook is run.
+     * @param {string} hookName 
+     * @param  {...any} args 
+     */
     hook(hookName, ...args) {
         var hook;
 
@@ -65,16 +107,26 @@ var managerAPI = {
             registry.hooks[hookName] = hook;
         }
 
+        // run
         return hook.inParallel(...args);
     },
 
+    /**
+     * PluginManager.manageHook:
+     * Fetches hook by name. Linguistically suited for administration.
+     * @param {string} hookName 
+     */
     manageHook(hookName) {
         // either fetch existing hook or create new one
         return registry.hooks[hookName] || new Hook(hookName);
 
     },
 
-
+    /**
+     * PluginManager.runHook:
+     * Fetches hook by name. Linguistically suited for executing hooks.
+     * @param {string} hookName 
+     */
     runHook(hookName) {
         // runHook and manageHook are identical. The difference is linguistic clarity.
         return this.manageHook(hookName)
@@ -96,62 +148,24 @@ var managerAPI = {
      * @param {function} callback
      * @returns {Promise}
      */
-    initAll(callback) {
-        var self = this,
-            inits = [];
-
+    initAll(callback, ...args) {
         // sort by priorities
-        plugins.sort(function (a, b) {
+        registry.plugins.sort(function (a, b) {
             return a.priority > b.priority;
         });
 
-        // register init & hooks
-        // hooks are all functions who are not special properties
-        // identified by "skipProps" list
-        plugins.forEach(function (plg) {
-            if (plg.init) {
-                inits.push(plg.init);
-            }
-            for (var prop in plg) {
-                if (skipProps.indexOf(prop) === -1 && typeof plg[prop] == 'function') {
-                    PluginManager.registerHook(prop, plg[prop]);
-                }
-            }
-        });
+        registry.plugins.forEach(plugin => {
+            plugin.init(...args);
+            plugin.subscribe();
+            plugin.active = true;
+        })
 
-        // run all plugin.init() method in series!
-        if (inits.length) {
-            var promises = []
-
-            try {
-                // for each init,
-                inits.forEach(init => {
-                    // create a new promise (and save to array)
-                    promises.push(new Promise(function (resolve, reject) {
-                        // and run the init (this will run one at a time, synchronously)
-                        return resolve(init());
-                    }))
-                })
-                // If we make it here, call the callback synchronously
-                callback()
-            }
-            catch (error) {
-                // If there were any errors, we made it here
-                callback(error)
-            }
-
-            // Return Promise.all, so that use can call .then for asynchronous callback.
-            return Promise.all(promises)
-        }
-        else {
-            // There were no plugins to init, so just move on.
-            callback()
-            return Promise.resolve()
-        }
+        return this;
     }
-
-
 }
+
+
+module.exports = managerAPI;
 
 
 
