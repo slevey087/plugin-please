@@ -32,7 +32,6 @@ class _Plugin {
             module,
             name,
             priority: 100,
-            active: false,
             init: function () { },
             require: function () { },
             stop: function () { },
@@ -43,7 +42,7 @@ class _Plugin {
 
         // Plugin-defined values and hooks (module code is run here, overwriting default 
         // properties assigned above)
-        Object.assign(this, module(context || {}))
+        Object.assign(this, module(context || {}), { active: false })
 
         // At this point, the plugin must have a name
         if (!this.name) throw new Error("Cannot load module without a name.")

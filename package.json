@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "toc": "markdown-toc -i readme.md",
-    "watch:test": "watch -p /test/* -c 'npm run test'"
+    "toc": "markdown-toc -i readme.md"
   },
   "author": "slevey087",
   "license": "ISC",
@@ -16,6 +15,11 @@
   },
   "optionalDependencies": {
     "debug": "^4.1.1"
+  },
+  "homepage": "https://github.com/slevey087/plugin-please",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/slevey087/plugin-please.git"
   },
   "jest": {
     "testPathIgnorePatterns": [

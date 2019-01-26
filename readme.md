@@ -42,15 +42,20 @@ PluginManager.importAll().initAll();
 PluginManager.hook("before-load")
 // ...
 PluginManager.hook("after-load")
+
+// ...
+
+// Before your application closes
+PluginManager.stopAll();
 ```
 
 ```js
 // In awesome-plugin.js
 module.exports = function awesomePlugin(){
-    // setup code here
+    // setup code here, runs when plugin is imported
     return {
         init(){
-            // code to run when plugin is activated
+            // code to run when plugin is initialized
         },
         hooks:{
             "before-load"(){
@@ -256,7 +261,7 @@ var awesome = function(){
 module.exports = awesome;
 ```
 
-The function body code will be run one time, when the plugin is first loaded into the manager (i.e. `PluginManager.plugin("awesome-plugin")`). It should be used to define any module-wide variables that your plugin will need, such as a variable to store settings, or object classes.
+The function body code will be run one time, when the plugin is first loaded into the manager (i.e. `PluginManager.import("awesome-plugin.js")` or `PluginManager.importAll()`). It should be used to define any module-wide variables that your plugin will need, such as a variable to store settings, or object classes.
 
 The return object is the meat of the plugin. Its entries can contain the metadata on the plugin (its name and priority), the basic API methods (`init`, `require`, `stop`, and `settings`), any hooks it's subscribing to, plus any other public variables it wants to expose. All fields are optional.
 
@@ -270,11 +275,12 @@ var awesome = function(){
     var settings = {} // use this to store settings
 
     return {
-        name: "awesome-plugin", // defaults to filename
-        priority: 101, // default is 100
+        name: "awesome-plugin", // defaults to filename, sans file extension (eg. awesome-plugin, not awesome-plugin.js)
+
+        priority: 101, // default is 100. Higher priority plugins will initialize first on .initAll. And, hook priority inherits from plugin priority unless overwritten.
         
         init(...args){
-            // this function will be run when .init() is called, and when .require() is called and the plugin isn't already active
+            // this function will be run when .init() is called, and when .require() is called if the plugin wasn't already active
         },
 
         require(...args){
@@ -299,7 +305,7 @@ var awesome = function(){
             // any keys in this object will be exposed on the plugin user interface, but only if the plugin is active. 
         },
 
-        // Use remaining keys to add hook subscriptions. Eg.,
+        // Assign code to run on hooks here. Key is hook name and value is function or object.
         hooks:{
             "on-load": function(...args){
                 // do stuff when the application loads
