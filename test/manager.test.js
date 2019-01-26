@@ -99,6 +99,68 @@ test("manager importAll", () => {
 })
 
 
+test("manager activePlugins", () => {
+    let context = {
+        name: "test2",
+    }
+    managerAPI.plugin(mockPlugin, context).init()
+
+    context = {
+        name: "test3",
+    }
+    managerAPI.plugin(mockPlugin, context)
+
+    var result = managerAPI.activePlugins()
+
+    expect(result).toBeInstanceOf(Array)
+    expect(result.length).toEqual(1)
+    expect(result[0]).toBeInstanceOf(Plugin)
+    expect(result[0].name()).toBe("test2")
+})
+
+
+test("manager inactivePlugins", () => {
+    let context = {
+        name: "test2",
+    }
+    managerAPI.plugin(mockPlugin, context).init()
+
+    context = {
+        name: "test3",
+    }
+    managerAPI.plugin(mockPlugin, context)
+
+    var result = managerAPI.inactivePlugins()
+
+    expect(result).toBeInstanceOf(Array)
+    expect(result.length).toEqual(1)
+    expect(result[0]).toBeInstanceOf(Plugin)
+    expect(result[0].name()).toBe("test3")
+})
+
+
+test("manager allPlugins", () => {
+    let context = {
+        name: "test2",
+    }
+    managerAPI.plugin(mockPlugin, context).init()
+
+    context = {
+        name: "test3",
+    }
+    managerAPI.plugin(mockPlugin, context)
+
+    var result = managerAPI.allPlugins()
+
+    expect(result).toBeInstanceOf(Array)
+    expect(result.length).toEqual(2)
+    expect(result[0]).toBeInstanceOf(Plugin)
+    expect(result[0].name()).toBe("test2")
+    expect(result[1]).toBeInstanceOf(Plugin)
+    expect(result[1].name()).toBe("test3")
+})
+
+
 test("manager hook", async () => {
     let hookfn = jest.fn(() => {
         return "hi"
@@ -164,6 +226,31 @@ test("manager initAll", () => {
     expect(initfn.mock.calls.length).toBe(1)
     expect(registry.getPluginByName("test2").active).toBe(true)
     expect(registry.hooks["on-load"].subscribers.length).toBe(1)
+})
+
+
+test("manager stopAll", () => {
+    let hookfn = jest.fn(() => {
+        return "hi"
+    })
+    let context = {
+        fns: true,
+        name: "test2",
+        hooks: { ['on-load']: hookfn }
+    }
+
+    managerAPI.plugin(mockPlugin, context)
+    managerAPI.import("sample-plugin")
+    managerAPI.initAll();
+    managerAPI.stopAll();
+
+    registry.plugins.forEach(plugin => {
+        expect(plugin.active).toBe(false)
+    })
+
+    expect(registry.hooks["on-load"].subscribers.length).toBe(0)
+
+
 })
 
 

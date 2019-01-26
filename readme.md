@@ -33,11 +33,8 @@ npm install plugin-please
 
 var PluginManager = require("plugin-please")("/path/to/plugins")
 
-// Import all plugins in plugins directory
-PluginManager.importAll();
-
-// Initialize all plugins
-PluginManager.initAll();
+// Import all plugins in plugins directory, then initialize them
+PluginManager.importAll().initAll();
 
 // ...
 
@@ -88,13 +85,31 @@ Then you can load plugins using a file name
 var filename = "awesome-plugin";
 PluginManager.import(filename); // imports awesome-plugin.js
 ```
-This will return a `plugin` object. (You can run this command multiple times to return a new instance of the object.)
+This will return a `plugin` object. To fetch the `plugin` object for a plugin that you've already imported, use `.plugin`:
+```js
+PluginManager.plugin("awesome-plugin") // retrieves previously imported
+```
+(If `.plugin` can't find a plugin, it will try importing a file)
 
-To load a whole folder, use `.importAll()`
+To load a whole folder, use `.importAll()`, then you can `initAll` or fetch plugins individually
 ```js
 PluginManager.importAll()
+PluginManager.plugin("some-plugin") // do something with the plugin
+
+// or
+PluginManager.importAll().initAll();
 ```
-Then use `.plugin` 
+To stop all plugins, you can use `.stopAll()`
+```js
+PluginManager.stopAll();
+```
+And you can use `.activePlugins`, `inactivePlugins`, and `allPlugins` to return arrays of plugins.
+```js
+PluginManager.activePlugins() // returns an array of active plugins
+PluginManager.inactivePlugins() // returns an array of inactive plugins
+PluginManager.allPlugins() // returns an array of all imported plugins regardless of whether they're active or not.
+```
+
 ## `Plugin` API
 
 ### Basic API

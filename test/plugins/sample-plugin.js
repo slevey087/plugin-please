@@ -7,7 +7,7 @@ module.exports = function awesomePlugin(context) {
             // code to run when plugin is activated
         },
         hooks: {
-            ["before-load"]() {
+            ["on-load"]() {
                 // code to run at the 'before-load' hook
             },
             ["after-load"]() {

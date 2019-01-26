@@ -18,6 +18,8 @@
     "debug": "^4.1.1"
   },
   "jest": {
-    "testPathIgnorePatters": "sample-plugin.js"
+    "testPathIgnorePatterns": [
+      "sample-plugin.js"
+    ]
   }
 }

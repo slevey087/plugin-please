@@ -77,17 +77,35 @@ var managerAPI = {
         return this;
     },
 
+    /**
+     * PluginManager.activePlugins:
+     * Return plugins that are currently active.
+     * @returns {array}
+     */
+    activePlugins() {
+        return registry.plugins
+            .filter(_plugin => _plugin.active === true)
+            .map(_plugin => new Plugin(_plugin))
+    },
 
-    plugins: {
-        listActive() {
+    /**
+     * PluginManager.inactivePlugins:
+     * Return plugins that are imported but not currently activated.
+     * @returns {array}
+     */
+    inactivePlugins() {
+        return registry.plugins
+            .filter(_plugin => _plugin.active === false)
+            .map(_plugin => new Plugin(_plugin))
+    },
 
-        },
-        listInactive() {
-
-        },
-        listAll() {
-
-        }
+    /**
+     * PluginManager.allPlugins:
+     * List all imported plugins
+     * @returns {array}
+     */
+    allPlugins() {
+        return registry.plugins.map(_plugin => new Plugin(_plugin))
     },
 
     /**
@@ -144,11 +162,9 @@ var managerAPI = {
 
     /**
      * PluginManager.initAll:
-     * Initialize all loaded plugins.
-     * @param {function} callback
-     * @returns {Promise}
+     * Initialize all loaded plugins.     
      */
-    initAll(callback, ...args) {
+    initAll(...args) {
         // sort by priorities
         registry.plugins.sort(function (a, b) {
             return a.priority > b.priority;
@@ -161,6 +177,20 @@ var managerAPI = {
         })
 
         return this;
+    },
+
+    /**
+     * PluginManager.stopAll:
+     * Stop all active plugins.
+     */
+    stopAll(...args) {
+        registry.plugins
+            .filter(plugin => plugin.active == true)
+            .forEach(plugin => {
+                plugin.stop(...args)
+                plugin.active = false
+                plugin.unsubscribe();
+            });
     }
 }
 

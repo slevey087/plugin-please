@@ -89,7 +89,7 @@ class _Plugin {
                 priority = plg.hooks[prop].priority;
 
             var hook = registry.hooks[prop] || new Hook(prop)
-            hook.subscribe(plg.hooks[prop], priority, plg[name]);
+            hook.subscribe(plg.hooks[prop], priority, plg.name);
 
         }
         return this;
@@ -178,7 +178,9 @@ class Plugin {
                 }
                 plg.active = false;
                 // remove public properties
-                Object.keys(plg.publicIfActive).forEach(prop => delete this[prop])
+                if (typeof plg.publicIfActive == "object")
+                    Object.keys(plg.publicIfActive).forEach(prop => delete this[prop])
+                return this;
             },
 
             settings: function (...args) {
