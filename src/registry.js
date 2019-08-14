@@ -5,19 +5,21 @@ var debug = require("./debug")
 // ---[[   R E G I S T R Y   ]]--- //
 // ------------------------------- //
 
+var path = require("path")
+
 debug("Creating registry.")
 
 /**
  * registry:
- * tracks module-wide variables: hooks, plugins, pluginNames, and the directory
+ * tracks module-wide variables: hooks, plugins, pluginNames, and the path directories
  */
 var registry = {
 
     /**
-     * registry.directory:
-     * the path to the plugins
+     * registry.directories:
+     * the path to the plugins. Defaults to the './plugins' folder in the current working directory
      */
-    directory: process.cwd(),
+    directories: [path.join(process.cwd(), "./plugins")],
 
     /**
      * registry.hooks:

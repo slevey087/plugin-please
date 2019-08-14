@@ -17,7 +17,7 @@ var path = require("path")
  */
 var PluginManager = function (directory) {
     // TODO: verify directory is directory
-    if (directory) registry.directory = path.join(process.cwd(), directory)
+    if (directory) registry.directories = [path.join(process.cwd(), directory)]
     return PluginManager
 }
 

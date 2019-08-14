@@ -7,7 +7,7 @@ var Hook = require("../src/hooks");
 
 // sample plugin path
 var path = require("path")
-registry.directory = path.join(process.cwd(), "/test/plugins")
+registry.directories = [path.join(process.cwd(), "/test/plugins")]
 
 // mocks
 var initfn = jest.fn()
@@ -87,7 +87,7 @@ test("manager importAll", () => {
     // returns self
     expect(result).toBe(managerAPI)
 
-    // if it imports one, it's probably working
+    // if it imports one, it's probably working!
     expect(registry.pluginNames).toContain("sample-plugin")
 
     // check that it feeds context
@@ -251,6 +251,14 @@ test("manager stopAll", () => {
     expect(registry.hooks["on-load"].subscribers.length).toBe(0)
 
 
+})
+
+
+test("manager addDirectories", () => {
+    // should add a directory
+    managerAPI.addDirectory("the")
+
+    //TODO finish here
 })
 
 

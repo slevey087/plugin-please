@@ -52,7 +52,12 @@ var managerAPI = {
      * @returns {Plugin}
      */
     import(source, context) {
-        var filePath = path.join(registry.directory, source)
+        var filePath;
+        for (var i = 0; i < registry.directories.length; i++) {
+            filePath = path.join(registry.directories[i], source)
+            if (fs.existsSync(filePath)) break;
+        }
+
         var module = require(filePath)
 
         // plugin name is file name, unless overwritten inside plugin code
@@ -69,9 +74,12 @@ var managerAPI = {
      * @param {*} dir
      * @returns {self} 
      */
-    importAll(context = null, dir = registry.directory) {
-        var files = fs.readdirSync(dir)
+    importAll(context = null, dirs = registry.directories) {
+        // allow single string
+        if (!Array.isArray(dirs)) dirs = [dirs];
 
+        var files = [];
+        dirs.forEach(dir => files = files.concat(fs.readdirSync(dir)))
         files.forEach(file => managerAPI.import(file, context))
 
         return this;
@@ -191,6 +199,17 @@ var managerAPI = {
                 plugin.active = false
                 plugin.unsubscribe();
             });
+    }
+
+    /**
+     * PluginManager.addDirectory:
+     * For adding multiple paths
+     */
+    addDirectory(...directories) {
+        // allow array argument
+        if (Array.isArray(directories[0]) directories = directories[0])
+
+        registry.directories = registry.directories.concat(directories);
     }
 }
 

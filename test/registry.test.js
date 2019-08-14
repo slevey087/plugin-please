@@ -5,12 +5,17 @@ beforeEach(() => {
 })
 
 test("registry has all properties", () => {
+    expect(registry).toHaveProperty("directories");
     expect(registry).toHaveProperty("hooks");
     expect(registry).toHaveProperty("plugins");
     expect(registry).toHaveProperty("pluginNames");
     expect(registry).toHaveProperty("getPluginByName");
+    expect(registry).toHaveProperty("reset");
 })
 
+test("registry defaults to cwd + /plugins", () => {
+    expect(registry.directories).toEqual([require("path").join(process.cwd(), "./plugins")])
+})
 
 test("getPluginByName returns plugin", () => {
     let plg1 = { name: "plg1" }
