@@ -10,7 +10,7 @@
   "author": "slevey087",
   "license": "ISC",
   "devDependencies": {
-    "jest": "^23.6.0",
+    "jest": "^26.1.0",
     "markdown-toc": "^1.2.0"
   },
   "optionalDependencies": {

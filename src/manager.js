@@ -80,6 +80,7 @@ var managerAPI = {
 
         var files = [];
         dirs.forEach(dir => files = files.concat(fs.readdirSync(dir)))
+        files = files.filter(file => file.endsWith(".js"))
         files.forEach(file => managerAPI.import(file, context))
 
         return this;
@@ -199,7 +200,7 @@ var managerAPI = {
                 plugin.active = false
                 plugin.unsubscribe();
             });
-    }
+    },
 
     /**
      * PluginManager.addDirectory:
@@ -207,7 +208,7 @@ var managerAPI = {
      */
     addDirectory(...directories) {
         // allow array argument
-        if (Array.isArray(directories[0]) directories = directories[0])
+        if (Array.isArray(directories[0])) directories = directories[0]
 
         registry.directories = registry.directories.concat(directories);
     }

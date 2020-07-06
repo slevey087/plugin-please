@@ -145,7 +145,7 @@ PluginManager.plugin("awesome-plugin").stop()
 To change the settings for a plugin, use `.settings()`
 ```js
 var awesomeSettings = { /* settings here */ }
-PluginManager.plugin("awesome-plugin").settings(awesomeSettings;)
+PluginManager.plugin("awesome-plugin").settings(awesomeSettings)
 ```
 
 ### Misc. Additional `Plugin` API
