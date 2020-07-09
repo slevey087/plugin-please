@@ -31,7 +31,7 @@ npm install plugin-please
 ```js
 // In application
 
-var PluginManager = require("plugin-please")("/path/to/plugins")
+var PluginManager = require("plugin-please")("path/to/plugins")
 
 // Import all plugins in plugins directory, then initialize them
 PluginManager.importAll().initAll();
@@ -80,7 +80,7 @@ var PluginManager = require("plugin-please");
 
 To use a custom directory, run on import:
 ```js
-var directory = "/path/to/plugins"
+var directory = "path/to/plugins"
 var PluginManager = require("plugin-please")(directory);
 ```
 
